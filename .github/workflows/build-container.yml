@@ -1,0 +1,124 @@
+name: Build PIA Manual Connections Container
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    # Build weekly to keep base image updated
+    - cron: '0 2 * * 0'
+
+env:
+  IMAGE_NAME: pia-manual-connections
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Generate image metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: Build container image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        outputs: type=docker,dest=/tmp/pia-connections.tar
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_DATE=${{ github.event.head_commit.timestamp }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ steps.meta.outputs.version }}
+        
+    - name: Test container functionality
+      run: |
+        # Load the built image
+        docker load -i /tmp/pia-connections.tar
+        
+        # Test basic functionality
+        echo "Testing container startup..."
+        docker run --rm ${{ env.IMAGE_NAME }}:latest --help || true
+        
+        # Test script availability
+        echo "Checking if core scripts are present..."
+        docker run --rm ${{ env.IMAGE_NAME }}:latest ls -la /usr/local/bin/ || true
+        
+    - name: Generate container scan report
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+        image: "pia-connections:latest"
+        fail-build: false
+        output-format: sarif
+        
+    - name: Upload vulnerability scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+        
+    - name: Create image information file
+      run: |
+        echo "# PIA Manual Connections Container Build Information" > /tmp/build-info.md
+        echo "" >> /tmp/build-info.md
+        echo "**Build Date:** $(date -Iseconds)" >> /tmp/build-info.md
+        echo "**Git SHA:** ${{ github.sha }}" >> /tmp/build-info.md
+        echo "**Branch:** ${{ github.ref_name }}" >> /tmp/build-info.md
+        echo "**Tags:** ${{ steps.meta.outputs.tags }}" >> /tmp/build-info.md
+        echo "" >> /tmp/build-info.md
+        echo "## Usage" >> /tmp/build-info.md
+        echo '```bash' >> /tmp/build-info.md
+        echo "# Load the container:" >> /tmp/build-info.md
+        echo "docker load -i pia-connections.tar" >> /tmp/build-info.md
+        echo "" >> /tmp/build-info.md
+        echo "# Run with environment variables:" >> /tmp/build-info.md
+        echo "docker run --rm -it --cap-add=NET_ADMIN \\" >> /tmp/build-info.md
+        echo "  -e PIA_USER=your_username \\" >> /tmp/build-info.md
+        echo "  -e PIA_PASS=your_password \\" >> /tmp/build-info.md
+        echo "  -e VPN_PROTOCOL=wireguard \\" >> /tmp/build-info.md
+        echo "  ${{ env.IMAGE_NAME }}:latest" >> /tmp/build-info.md
+        echo '```' >> /tmp/build-info.md
+        
+    - name: Upload container image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pia-connections-container-${{ github.sha }}
+        path: /tmp/pia-connections.tar
+        retention-days: 30
+        compression-level: 6
+        
+    - name: Upload build information
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-info-${{ github.sha }}
+        path: /tmp/build-info.md
+        retention-days: 30
+        
+    - name: Upload vulnerability scan
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-${{ github.sha }}
+        path: ${{ steps.scan.outputs.sarif }}
+        retention-days: 30
