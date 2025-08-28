@@ -29,7 +29,7 @@ WORKDIR /src
 
 # Clone the repository
 # RUN git clone https://github.com/pia-foss/manual-connections.git
-COPY . ./manual-connections
+COPY . /src/manual-connections
 
 # Set ownership of the cloned repository to the pia user
 RUN chown -R pia:pia /src/manual-connections
