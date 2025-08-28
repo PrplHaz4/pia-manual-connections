@@ -33,6 +33,7 @@ COPY . /src/manual-connections
 
 # Set ownership of the cloned repository to the pia user
 RUN chown -R pia:pia /src/manual-connections
+RUN ls -la /src/manual-connections/
 
 # Switch to the pia user
 USER pia
