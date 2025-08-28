@@ -38,8 +38,8 @@ RUN chown -R pia:pia /src/manual-connections
 USER pia
 
 # Make the run_setup.sh script executable
-RUN chmod +x run_setup.sh
-RUN chmod +x /home/pia/manual-connections/docker-scripts/startup.sh
+RUN chmod +x /src/manual-connections/run_setup.sh
+RUN chmod +x /src/manual-connections/docker-scripts/startup.sh
 RUN cp -r /src/manual-connections /home/pia/
 
 # Set the working directory to the cloned repository
