@@ -23,8 +23,8 @@ RUN echo "pia ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /home/pia
 
 # Clone the repository
-RUN git clone https://github.com/pia-foss/manual-connections.git
-# COPY . ./manual-connections
+# RUN git clone https://github.com/pia-foss/manual-connections.git
+COPY . ./manual-connections
 
 # Set ownership of the cloned repository to the pia user
 RUN chown -R pia:pia /home/pia/manual-connections
@@ -42,8 +42,8 @@ WORKDIR /home/pia/manual-connections
 
 # Make the run_setup.sh script executable
 RUN chmod +x run_setup.sh
-RUN cd /home/pia/manual-connections/docker-scripts && chmod +x startup.sh
-# chmod +x /home/pia/manual-connections/docker-scripts/startup.sh
+RUN /bin/bash -c 'chmod +x /home/pia/manual-connections/docker-scripts/startup.sh'
+# RUN cd /home/pia/manual-connections/docker-scripts && chmod +x startup.sh
 
 # Set the startup script as the entry point
 CMD ["/home/pia/manual-connections/docker-scripts/startup.sh"]
