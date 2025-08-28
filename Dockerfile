@@ -39,8 +39,11 @@ USER pia
 
 # Make the run_setup.sh script executable
 RUN chmod +x /src/manual-connections/run_setup.sh
+RUN ls -la /src/manual-connections/docker-scripts/
 RUN chmod +x /src/manual-connections/docker-scripts/startup.sh
+RUN ls -la /src/manual-connections/docker-scripts/
 RUN cp -r /src/manual-connections /home/pia/
+RUN ls -la /home/pia/
 
 # Set the working directory to the cloned repository
 WORKDIR /home/pia/manual-connections
