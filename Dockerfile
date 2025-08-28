@@ -31,11 +31,11 @@ WORKDIR /src
 # RUN git clone https://github.com/pia-foss/manual-connections.git
 COPY . ./manual-connections
 
-# Switch to the pia user
-USER pia
-
 # Set ownership of the cloned repository to the pia user
 RUN chown -R pia:pia /src/manual-connections
+
+# Switch to the pia user
+USER pia
 
 # Make the run_setup.sh script executable
 RUN chmod +x run_setup.sh
