@@ -42,7 +42,8 @@ WORKDIR /home/pia/manual-connections
 
 # Make the run_setup.sh script executable
 RUN chmod +x run_setup.sh
-RUN chmod +x /home/pia/manual-connections/docker-scripts/startup.sh
+RUN cd /home/pia/manual-connections/docker-scripts && chmod +x startup.sh
+# chmod +x /home/pia/manual-connections/docker-scripts/startup.sh
 
 # Set the startup script as the entry point
 CMD ["/home/pia/manual-connections/docker-scripts/startup.sh"]
