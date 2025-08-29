@@ -68,7 +68,7 @@ jobs:
       uses: anchore/scan-action@v6
       id: scan
       with:
-        image: "pia-connections:latest"
+        image: ${{ env.IMAGE_NAME }}:latest #"pia-connections:latest"
         fail-build: false
         output-format: sarif
         
