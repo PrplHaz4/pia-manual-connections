@@ -65,7 +65,7 @@ jobs:
         docker run --rm ${{ env.IMAGE_NAME }}:latest ls -la /usr/local/bin/ || true
         
     - name: Generate container scan report
-      uses: anchore/scan-action@v3
+      uses: anchore/scan-action@v6
       id: scan
       with:
         image: "pia-connections:latest"
